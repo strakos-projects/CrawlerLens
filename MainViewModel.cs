@@ -12,7 +12,21 @@ namespace CrawlerLens // Změněn namespace na hlavní (kořenový)
 {
     public partial class MainViewModel : ObservableObject
     {
-        private readonly HttpClient _httpClient = new HttpClient();
+        private readonly HttpClient _httpClient;
+
+        public MainViewModel()
+        {
+            // 1. Nastavíme handler, který automaticky dekomprimuje GZip, Deflate i moderní Brotli
+            var handler = new HttpClientHandler
+            {
+                AutomaticDecompression = System.Net.DecompressionMethods.All
+            };
+
+            _httpClient = new HttpClient(handler);
+
+            // 2. Nastavíme User-Agent hlavičku, abychom se tvářili jako legitimní prohlížeč
+            _httpClient.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 CrawlerLens/1.0");
+        }
 
         [ObservableProperty]
         private string _targetUrl = "https://";
