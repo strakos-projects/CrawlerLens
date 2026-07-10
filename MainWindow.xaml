@@ -1,0 +1,157 @@
+﻿<ui:FluentWindow x:Class="CrawlerLens.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+        xmlns:local="clr-namespace:CrawlerLens"
+        mc:Ignorable="d"
+        Title="CrawlerLens - SEO Machine Vision" Height="750" Width="1000"
+        ExtendsContentIntoTitleBar="True"
+        WindowBackdropType="Mica"
+        WindowStartupLocation="CenterScreen">
+
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis" />
+    </Window.Resources>
+
+    <Window.DataContext>
+        <local:MainViewModel />
+    </Window.DataContext>
+
+    <Grid Margin="0,0,0,16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <ui:TitleBar Grid.Row="0" Title="CrawlerLens" Icon="Eye24" Margin="0,0,0,16" Padding="16,8"/>
+
+        <Grid Grid.Row="1" Margin="16,0,16,16">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <ui:TextBox Grid.Column="0" Text="{Binding TargetUrl, UpdateSourceTrigger=PropertyChanged}" 
+                        PlaceholderText="Enter URL to analyze (e.g., https://github.com)" 
+                        Icon="Globe24" FontSize="16" Height="40" Margin="0,0,8,0"/>
+
+            <ui:Button Grid.Column="1" Command="{Binding AnalyzeUrlCommand}" 
+                       Appearance="Primary" Height="40" Padding="24,0">
+                <StackPanel Orientation="Horizontal">
+                    <ui:ProgressRing IsIndeterminate="True" Width="16" Height="16" Margin="0,0,8,0" 
+                                     Visibility="{Binding IsBusy, Converter={StaticResource BoolToVis}}" />
+                    <TextBlock Text="Analyze" VerticalAlignment="Center"/>
+                </StackPanel>
+            </ui:Button>
+        </Grid>
+
+        <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto" Margin="16,0,16,0">
+            <StackPanel Margin="0,0,0,16">
+
+                <ui:Card Margin="0,0,0,12">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                            <ui:SymbolIcon Symbol="DocumentText24" Margin="0,0,8,0" />
+                            <TextBlock Text="Core Metadata" FontSize="16" FontWeight="SemiBold" />
+                        </StackPanel>
+
+                        <TextBlock Text="Title" FontWeight="Bold" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                        <ui:TextBox Text="{Binding PageTitle, Mode=OneWay}" IsReadOnly="True" TextWrapping="Wrap" Margin="0,4,0,8" />
+
+                        <TextBlock Text="Description" FontWeight="Bold" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                        <ui:TextBox Text="{Binding MetaDescription, Mode=OneWay}" IsReadOnly="True" TextWrapping="Wrap" MinLines="2" Margin="0,4,0,8"/>
+
+                        <TextBlock Text="Meta Robots" FontWeight="Bold" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                        <ui:TextBox Text="{Binding MetaRobots, Mode=OneWay}" IsReadOnly="True" Margin="0,4,0,0" />
+                    </StackPanel>
+                </ui:Card>
+
+                <Grid Margin="0,0,0,12">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="12" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <ui:Card Grid.Column="0">
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                                <ui:SymbolIcon Symbol="ShareAndroid24" Margin="0,0,8,0" />
+                                <TextBlock Text="Open Graph (og:*)" FontWeight="Bold" FontSize="16" />
+                            </StackPanel>
+                            <ItemsControl ItemsSource="{Binding OpenGraphTags}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid Margin="0,0,0,8">
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="Auto"/>
+                                            </Grid.RowDefinitions>
+                                            <TextBlock Text="{Binding Key}" FontSize="11" Foreground="{DynamicResource TextFillColorTertiaryBrush}" FontWeight="SemiBold"/>
+                                            <ui:TextBox Grid.Row="1" Text="{Binding Value, Mode=OneWay}" IsReadOnly="True" TextWrapping="Wrap" Margin="0,2,0,0"/>
+                                        </Grid>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </ui:Card>
+
+                    <ui:Card Grid.Column="2">
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                                <ui:SymbolIcon Symbol="News24" Margin="0,0,8,0" />
+                                <TextBlock Text="Twitter Cards (twitter:*)" FontWeight="Bold" FontSize="16" />
+                            </StackPanel>
+                            <ItemsControl ItemsSource="{Binding TwitterTags}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid Margin="0,0,0,8">
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="Auto"/>
+                                            </Grid.RowDefinitions>
+                                            <TextBlock Text="{Binding Key}" FontSize="11" Foreground="{DynamicResource TextFillColorTertiaryBrush}" FontWeight="SemiBold"/>
+                                            <ui:TextBox Grid.Row="1" Text="{Binding Value, Mode=OneWay}" IsReadOnly="True" TextWrapping="Wrap" Margin="0,2,0,0"/>
+                                        </Grid>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </ui:Card>
+                </Grid>
+
+                <ui:Card Margin="0,0,0,12">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                            <ui:SymbolIcon Symbol="Code24" Margin="0,0,8,0" />
+                            <TextBlock Text="Schema.org (JSON-LD)" FontSize="16" FontWeight="SemiBold" />
+                        </StackPanel>
+                        <ItemsControl ItemsSource="{Binding JsonLdSchemas}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <ui:TextBox Text="{Binding Mode=OneWay}" IsReadOnly="True" 
+                                                TextWrapping="Wrap" FontFamily="Consolas" MinLines="5" Margin="0,0,0,8"/>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </ui:Card>
+
+                <ui:Card>
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                            <ui:SymbolIcon Symbol="Bot24" Margin="0,0,8,0" />
+                            <TextBlock Text="robots.txt" FontSize="16" FontWeight="SemiBold" />
+                        </StackPanel>
+                        <ui:TextBox Text="{Binding RobotsTxtContent, Mode=OneWay}" IsReadOnly="True" 
+                                    TextWrapping="Wrap" FontFamily="Consolas" MinLines="5"/>
+                    </StackPanel>
+                </ui:Card>
+
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</ui:FluentWindow>
