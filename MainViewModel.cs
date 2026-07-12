@@ -482,18 +482,24 @@ namespace CrawlerLens
                 var keywords = string.Join(", ", TopKeywords.Take(5).Select(k => $"{k.Word} ({k.Density}%)"));
                 reportBuilder.AppendLine($"- Top Keywords: {keywords}");
 
-
                 var bodyNode = doc.DocumentNode.SelectSingleNode("//body");
                 if (bodyNode != null)
                 {
-                    string rawText = System.Net.WebUtility.HtmlDecode(bodyNode.InnerText ?? string.Empty);
+                    // 1. Získáme všechny čistě textové uzly z <body> (vyhneme se tak slévání tagů)
+                    var textNodes = bodyNode.SelectNodes(".//text()");
+                    string aiCleanText = string.Empty;
 
-                    // Rozbijeme text na riadky, orežeme biele znaky a vynecháme úplne prázdne riadky kvôli šetreniu tokenov
-                    var cleanLines = rawText.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None)
-                                            .Select(line => line.Trim())
-                                            .Where(line => !string.IsNullOrWhiteSpace(line));
+                    if (textNodes != null)
+                    {
+                        // 2. Každý textový uzel dekódujeme, ořízneme z něj bílé znaky a ty prázdné zahodíme
+                        var cleanTexts = textNodes
+                            .Select(n => System.Net.WebUtility.HtmlDecode(n.InnerText).Trim())
+                            .Where(t => !string.IsNullOrWhiteSpace(t));
 
-                    string aiCleanText = string.Join("\n", cleanLines);
+                        // 3. Spojíme mezerou. Pokud chceš AI šetřit na tokenech, stačí obyčejná mezera,
+                        // alternativně můžeš použít "\n" pro zachování odřádkování za každým uzlem.
+                        aiCleanText = string.Join(" ", cleanTexts);
+                    }
 
                     reportBuilder.AppendLine("\n=== PAGE TEXT CONTENT ===");
                     reportBuilder.AppendLine(aiCleanText);
