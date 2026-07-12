@@ -585,25 +585,45 @@ namespace CrawlerLens
 
         private void AnalyzeContent(HtmlDocument doc)
         {
+            // 1. Odstraníme nepotřebné skripty a styly
             var nodesToRemove = doc.DocumentNode.SelectNodes("//script | //style");
             if (nodesToRemove != null) foreach (var node in nodesToRemove) node.Remove();
 
-            var innerText = doc.DocumentNode.SelectSingleNode("//body")?.InnerText ?? string.Empty;
-            innerText = System.Net.WebUtility.HtmlDecode(innerText);
+            // 2. Extrahujeme text pomocí textových uzlů (aby nedošlo ke slepení)
+            var bodyNode = doc.DocumentNode.SelectSingleNode("//body");
+            string innerText = string.Empty;
 
+            if (bodyNode != null)
+            {
+                var textNodes = bodyNode.SelectNodes(".//text()");
+                if (textNodes != null)
+                {
+                    var cleanTexts = textNodes
+                        .Select(n => System.Net.WebUtility.HtmlDecode(n.InnerText).Trim())
+                        .Where(t => !string.IsNullOrWhiteSpace(t));
+
+                    // Zde text spojíme mezerou, čímž vyřešíme slepená slova
+                    innerText = string.Join(" ", cleanTexts);
+                }
+            }
+
+            // 3. Spočítáme slova pomocí Regexu
             var wordRegex = new Regex(@"\b[\p{L}]+\b");
             var matches = wordRegex.Matches(innerText);
             TotalWordCount = matches.Count;
 
+            // 4. Seznam stop-slov a filtrace
             var stopWords = new HashSet<string>(StringComparer.OrdinalIgnoreCase) {
-                "a", "i", "o", "u", "s", "z", "k", "v", "do", "na", "pro", "za", "že", "to", "se", "si", "je", "od", "ze", "ve",
-                "the", "of", "and", "in", "to", "is", "for", "on", "with", "as", "by", "at", "it", "this", "that", "are", "or", "be"
-            };
+        "a", "i", "o", "u", "s", "z", "k", "v", "do", "na", "pro", "za", "že", "to", "se", "si", "je", "od", "ze", "ve",
+        "the", "of", "and", "in", "to", "is", "for", "on", "with", "as", "by", "at", "it", "this", "that", "are", "or", "be",
+        "co", "jak", "ale", "tak", "už", "když", "aby", "kde", "jen" // Přidal jsem ti pár dalších užitečných českých stop-slov :)
+    };
 
             var wordGroups = matches.Select(m => m.Value.ToLowerInvariant())
                                     .Where(w => w.Length > 2 && !stopWords.Contains(w))
                                     .GroupBy(w => w).OrderByDescending(g => g.Count()).Take(15).ToList();
 
+            // 5. Uložení výsledků do kolekce
             TopKeywords.Clear();
             foreach (var group in wordGroups)
             {
