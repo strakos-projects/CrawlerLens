@@ -428,6 +428,7 @@ namespace CrawlerLens
                 var doc = new HtmlDocument();
                 doc.LoadHtml(finalHtml);
 
+                // --- ZÁKLADNÍ SEO ---
                 reportBuilder.AppendLine($"- Title: {doc.DocumentNode.SelectSingleNode("//title")?.InnerText?.Trim() ?? "Missing"}");
                 reportBuilder.AppendLine($"- Canonical: {doc.DocumentNode.SelectSingleNode("//link[@rel='canonical']")?.GetAttributeValue("href", "Missing") ?? "Missing"}");
                 reportBuilder.AppendLine($"- HTML Lang: {doc.DocumentNode.SelectSingleNode("//html")?.GetAttributeValue("lang", "Missing") ?? "Missing"}");
@@ -435,10 +436,90 @@ namespace CrawlerLens
                 var metaRefresh = doc.DocumentNode.SelectSingleNode("//meta[@http-equiv='refresh']")?.GetAttributeValue("content", "");
                 if (!string.IsNullOrEmpty(metaRefresh)) reportBuilder.AppendLine($"- WARNING: Meta Refresh Redirect detected: {metaRefresh}");
 
+                var metaRobots = doc.DocumentNode.SelectSingleNode("//meta[@name='robots']")?.GetAttributeValue("content", "Missing (Default: Index, Follow)") ?? "Missing";
+                reportBuilder.AppendLine($"- Indexability (Meta Robots): {metaRobots}");
+
+                // --- HREFLANG ---
+                var hreflangs = doc.DocumentNode.SelectNodes("//link[@rel='alternate' and @hreflang]");
+                if (hreflangs != null)
+                {
+                    var langList = hreflangs.Select(n => $"{n.GetAttributeValue("hreflang", "")} ({n.GetAttributeValue("href", "")})");
+                    reportBuilder.AppendLine($"- Hreflang: {string.Join(", ", langList)}");
+                }
+
+                // --- OPEN GRAPH & TWITTER CARDS ---
+                var ogNodes = doc.DocumentNode.SelectNodes("//meta[starts-with(@property, 'og:')]");
+                if (ogNodes != null)
+                {
+                    var ogList = ogNodes.Select(n => $"{n.GetAttributeValue("property", "")}: {n.GetAttributeValue("content", "")}");
+                    reportBuilder.AppendLine($"- Open Graph: {string.Join(" | ", ogList)}");
+                }
+
+                var twNodes = doc.DocumentNode.SelectNodes("//meta[starts-with(@name, 'twitter:')]");
+                if (twNodes != null)
+                {
+                    var twList = twNodes.Select(n => $"{n.GetAttributeValue("name", "")}: {n.GetAttributeValue("content", "")}");
+                    reportBuilder.AppendLine($"- Twitter Cards: {string.Join(" | ", twList)}");
+                }
+
+                // --- SCHEMA.ORG (JSON-LD) ---
+                var jsonNodes = doc.DocumentNode.SelectNodes("//script[@type='application/ld+json']");
+                if (jsonNodes != null)
+                {
+                    reportBuilder.AppendLine($"- Schema.org (JSON-LD): Found {jsonNodes.Count} script(s)");
+                    int schemaIdx = 1;
+                    foreach (var node in jsonNodes)
+                    {
+                        var rawJson = node.InnerText?.Trim() ?? string.Empty;
+                        var formatted = FormatJson(rawJson);
+                        reportBuilder.AppendLine($"  [Schema {schemaIdx++}]:\n{formatted}");
+                    }
+                }
+
+                // --- ANALÝZA TEXTU ---
                 AnalyzeContent(doc);
                 reportBuilder.AppendLine($"- Total Word Count: {TotalWordCount}");
                 var keywords = string.Join(", ", TopKeywords.Take(5).Select(k => $"{k.Word} ({k.Density}%)"));
                 reportBuilder.AppendLine($"- Top Keywords: {keywords}");
+
+
+                var bodyNode = doc.DocumentNode.SelectSingleNode("//body");
+                if (bodyNode != null)
+                {
+                    string rawText = System.Net.WebUtility.HtmlDecode(bodyNode.InnerText ?? string.Empty);
+
+                    // Rozbijeme text na riadky, orežeme biele znaky a vynecháme úplne prázdne riadky kvôli šetreniu tokenov
+                    var cleanLines = rawText.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None)
+                                            .Select(line => line.Trim())
+                                            .Where(line => !string.IsNullOrWhiteSpace(line));
+
+                    string aiCleanText = string.Join("\n", cleanLines);
+
+                    reportBuilder.AppendLine("\n=== PAGE TEXT CONTENT ===");
+                    reportBuilder.AppendLine(aiCleanText);
+                    reportBuilder.AppendLine("=========================");
+                }
+
+                // --- ROBOTS.TXT ---
+                try
+                {
+                    var robotsUrl = new Uri(new Uri(currentUrl), "/robots.txt");
+                    var robotsResponse = await _httpClient.GetAsync(robotsUrl);
+                    if (robotsResponse.IsSuccessStatusCode)
+                    {
+                        var robotsTxt = await robotsResponse.Content.ReadAsStringAsync();
+                        reportBuilder.AppendLine($"- robots.txt: Found");
+                        reportBuilder.AppendLine($"\n=== ROBOTS.TXT CONTENT ===\n{robotsTxt}\n==========================");
+                    }
+                    else
+                    {
+                        reportBuilder.AppendLine($"- robots.txt: Not Found ({robotsResponse.StatusCode})");
+                    }
+                }
+                catch
+                {
+                    reportBuilder.AppendLine($"- robots.txt: Error fetching");
+                }
             }
         }
 
