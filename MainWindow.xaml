@@ -68,6 +68,15 @@
 
                             <ui:Card Margin="0,0,0,12">
                                 <StackPanel>
+                                    <ui:Card Margin="0,0,0,16" Padding="12" Background="{DynamicResource ControlFillColorTertiaryBrush}" BorderBrush="{DynamicResource ControlElevationBorderBrush}">
+                                        <StackPanel>
+                                            <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                                <ui:SymbolIcon Symbol="NetworkCheck24" Margin="0,0,8,0" Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                                                <TextBlock Text="Active Crawler Identity (Go to Settings to change)" FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorSecondaryBrush}" VerticalAlignment="Center"/>
+                                            </StackPanel>
+                                            <TextBlock Text="{Binding ActiveHeadersPreview}" FontFamily="Consolas" FontSize="11" Foreground="{DynamicResource TextFillColorTertiaryBrush}" TextWrapping="Wrap" />
+                                        </StackPanel>
+                                    </ui:Card>
                                     <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
                                         <ui:SymbolIcon Symbol="DocumentText24" Margin="0,0,8,0" />
                                         <TextBlock Text="Core Metadata" FontSize="16" FontWeight="SemiBold" />
@@ -342,7 +351,78 @@
                     </ui:Card>
                 </Grid>
             </TabItem>
+            <TabItem>
+                <TabItem.Header>
+                    <StackPanel Orientation="Horizontal">
+                        <ui:SymbolIcon Symbol="Settings24" Margin="0,0,8,0"/>
+                        <TextBlock Text="Settings" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </TabItem.Header>
 
+                <Grid Margin="0,16,0,0">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <ui:Card Margin="0,0,0,16">
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
+                                <ui:SymbolIcon Symbol="PersonFeedback24" Margin="0,0,8,0" />
+                                <TextBlock Text="Crawler Identity (Spoofing)" FontSize="16" FontWeight="SemiBold" />
+                            </StackPanel>
+
+                            <Grid Margin="0,0,0,12">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="16"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+
+                                <StackPanel>
+                                    <TextBlock Text="Browser Simulation (User-Agent)" FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,4"/>
+                                    <ComboBox ItemsSource="{Binding AvailableBrowsers}" 
+                                              SelectedItem="{Binding SelectedBrowser, UpdateSourceTrigger=PropertyChanged}" 
+                                              HorizontalAlignment="Stretch" />
+                                </StackPanel>
+
+                                <StackPanel Grid.Column="2">
+                                    <TextBlock Text="Location / Language (Accept-Language)" FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,4"/>
+                                    <ComboBox ItemsSource="{Binding AvailableLocales}" 
+                                              SelectedItem="{Binding SelectedLocale, UpdateSourceTrigger=PropertyChanged}" 
+                                              HorizontalAlignment="Stretch" />
+                                </StackPanel>
+                            </Grid>
+                        </StackPanel>
+                    </ui:Card>
+
+                    <ui:Card Grid.Row="1" VerticalAlignment="Stretch">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                <TextBlock Text="Raw HTTP Request Headers Preview" FontWeight="SemiBold" VerticalAlignment="Center" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                                <TextBlock Text="(Edit to create custom headers)" Margin="8,0,0,0" VerticalAlignment="Center" FontStyle="Italic" Foreground="{DynamicResource TextFillColorTertiaryBrush}"/>
+                            </StackPanel>
+
+                            <ui:TextBox Grid.Row="1" Text="{Binding RawHeadersPreview, UpdateSourceTrigger=PropertyChanged}" 
+                                        AcceptsReturn="True" TextWrapping="Wrap" 
+                                        VerticalScrollBarVisibility="Auto" FontFamily="Consolas" />
+
+                            <ui:Button Grid.Row="2" Command="{Binding SaveSettingsCommand}" Appearance="Primary" Margin="0,16,0,0" HorizontalAlignment="Right" Padding="24,0,24,0">
+                                <StackPanel Orientation="Horizontal">
+                                    <ui:SymbolIcon Symbol="Save24" Margin="0,0,8,0" />
+                                    <TextBlock Text="Save &amp; Apply Settings" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </ui:Button>
+                        </Grid>
+                    </ui:Card>
+                </Grid>
+            </TabItem>
         </TabControl>
     </Grid>
 </ui:FluentWindow>
