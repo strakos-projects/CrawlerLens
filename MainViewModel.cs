@@ -5,28 +5,280 @@ using System;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Net.Http;
+using System.Text;
 using System.Text.Json;
-using System.Threading.Tasks;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
+using System.Windows;
 namespace CrawlerLens // Změněn namespace na hlavní (kořenový)
 {
     public partial class MainViewModel : ObservableObject
     {
+        // --- AI PROMPT GENERATOR PROPERTIES ---
+
+        private string _aiPromptOutput = string.Empty;
+        public string AiPromptOutput
+        {
+            get => _aiPromptOutput;
+            set
+            {
+                SetProperty(ref _aiPromptOutput, value);
+                CalculateStats();
+            }
+        }
+        // --- POMOCNÁ METODA PRO VÝPOČET STATISTIK ---
+        private void CalculateStats()
+        {
+            if (string.IsNullOrEmpty(AiPromptOutput))
+            {
+                PromptCharCount = 0;
+                PromptEstTokens = 0;
+                PromptEstCost = "$0.000";
+                return;
+            }
+
+            PromptCharCount = AiPromptOutput.Length;
+
+            // Hrubý odhad: 1 token = cca 4 anglické znaky (standardní pravidlo pro OpenAI modely)
+            PromptEstTokens = (int)Math.Ceiling(PromptCharCount / 4.0);
+
+            // Odhad ceny: např. GPT-4o-mini aktuálně stojí cca $0.150 za 1 milion vstupních tokenů
+            double costPerMillionTokens = 2.50;
+            double cost = (PromptEstTokens / 1_000_000.0) * costPerMillionTokens;
+
+            PromptEstCost = $"${cost:F4}";
+        }
+
+        // --- COMMAND: COPY TO CLIPBOARD ---
+        [RelayCommand]
+        private async Task CopyPromptAsync()
+        {
+            if (string.IsNullOrWhiteSpace(AiPromptOutput)) return;
+
+            try
+            {
+                // Zkopírování do systémové schránky (vyžaduje System.Windows)
+                System.Windows.Clipboard.SetText(AiPromptOutput);
+
+                // Vizuální zpětná vazba pro uživatele
+                CopyButtonText = "Copied!";
+                CopyButtonIcon = Wpf.Ui.Controls.SymbolRegular.Checkmark24;
+
+                // Počkáme 2 sekundy a vrátíme tlačítko do původního stavu
+                await Task.Delay(2000);
+
+                CopyButtonText = "Copy to Clipboard";
+                CopyButtonIcon = Wpf.Ui.Controls.SymbolRegular.Copy24;
+            }
+            catch
+            {
+                CopyButtonText = "Error copying";
+                await Task.Delay(2000);
+                CopyButtonText = "Copy to Clipboard";
+            }
+        }
+        // Statistiky
+        [ObservableProperty] private int _promptCharCount;
+        [ObservableProperty] private int _promptEstTokens;
+        [ObservableProperty] private string _promptEstCost = "$0.000";
+
+        // Tlačítko kopírování (stav)
+        [ObservableProperty] private string _copyButtonText = "Copy to Clipboard";
+        [ObservableProperty] private Wpf.Ui.Controls.SymbolRegular _copyButtonIcon = Wpf.Ui.Controls.SymbolRegular.Copy24;
         private readonly HttpClient _httpClient;
         [ObservableProperty] private string _canonicalUrl = string.Empty;
         [ObservableProperty] private int _totalWordCount;
+        // --- AI PROMPT GENERATOR PROPERTIES ---
+        [ObservableProperty] private string _urlBatchInput = string.Empty;
+        [ObservableProperty] private bool _isGeneratingPrompt;
+
+        // --- AI PROMPT COMMAND ---
+        [RelayCommand]
+        private async Task GenerateAiReportAsync()
+        {
+            if (string.IsNullOrWhiteSpace(UrlBatchInput)) return;
+
+            IsGeneratingPrompt = true;
+            AiPromptOutput = "Generating AI Context Payload... Please wait.";
+
+            var urls = UrlBatchInput.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)
+                                    .Select(u => u.Trim())
+                                    .Distinct()
+                                    .ToList();
+
+            var reportBuilder = new StringBuilder();
+            reportBuilder.AppendLine("System Instruction: You are a Senior Technical SEO Expert. Review the following \"CrawlerLens Audit Payload\". Analyze technical issues (redirect chains, status codes, missing tags, canonicals) and content quality. Provide an actionable SEO strategy.");
+            reportBuilder.AppendLine("\n=== CRAWLERLENS AUDIT PAYLOAD ===\n");
+
+            foreach (var initialUrl in urls)
+            {
+                if (!Uri.TryCreate(initialUrl, UriKind.Absolute, out Uri? validUri))
+                {
+                    reportBuilder.AppendLine($"[URL] {initialUrl}");
+                    reportBuilder.AppendLine("- Error: Invalid URL format\n");
+                    continue;
+                }
+
+                reportBuilder.AppendLine($"[URL] {initialUrl}");
+                await AppendUrlReportAsync(validUri, reportBuilder);
+                reportBuilder.AppendLine(); // Empty line between URLs
+            }
+
+            AiPromptOutput = reportBuilder.ToString();
+            IsGeneratingPrompt = false;
+        }
+
+        private async Task AppendUrlReportAsync(Uri initialUri, StringBuilder reportBuilder)
+        {
+            int hops = 0;
+            string currentUrl = initialUri.ToString();
+            string finalHtml = string.Empty;
+
+            reportBuilder.AppendLine("- Redirect Chain:");
+
+            while (hops < 5)
+            {
+                try
+                {
+                    var request = new HttpRequestMessage(HttpMethod.Get, currentUrl);
+                    var response = await _httpClient.SendAsync(request);
+                    int statusCode = (int)response.StatusCode;
+
+                    reportBuilder.AppendLine($"  -> [{statusCode} {response.StatusCode}] {currentUrl}");
+
+                    // Zvládneme běžná přesměrování (301, 302, 307, 308)
+                    if (statusCode >= 300 && statusCode <= 399)
+                    {
+                        Uri? location = response.Headers.Location;
+                        if (location == null) break;
+
+                        if (!location.IsAbsoluteUri)
+                        {
+                            location = new Uri(new Uri(currentUrl), location);
+                        }
+                        currentUrl = location.ToString();
+                        hops++;
+                    }
+                    else
+                    {
+                        // Pokud projde 200 OK, nebo spadne na 404/403, stáhneme HTML
+                        finalHtml = await response.Content.ReadAsStringAsync();
+                        break;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    reportBuilder.AppendLine($"  -> [Error] {ex.Message}");
+                    break;
+                }
+            }
+
+            if (hops >= 5)
+            {
+                reportBuilder.AppendLine("- Error: Redirect loop or too many hops detected.");
+            }
+
+            // Parsování kompletního HTML pro ultimátní AI Payload
+            if (!string.IsNullOrEmpty(finalHtml))
+            {
+                var doc = new HtmlDocument();
+                doc.LoadHtml(finalHtml);
+
+                var title = doc.DocumentNode.SelectSingleNode("//title")?.InnerText?.Trim() ?? "Missing";
+                var canonical = doc.DocumentNode.SelectSingleNode("//link[@rel='canonical']")?.GetAttributeValue("href", "Missing") ?? "Missing";
+                var metaDesc = doc.DocumentNode.SelectSingleNode("//meta[@name='description']")?.GetAttributeValue("content", "Missing") ?? "Missing";
+                var metaRobots = doc.DocumentNode.SelectSingleNode("//meta[@name='robots']")?.GetAttributeValue("content", "Missing (Default: Index, Follow)") ?? "Missing";
+                var h1 = doc.DocumentNode.SelectSingleNode("//h1")?.InnerText?.Trim() ?? "Missing";
+                var htmlLang = doc.DocumentNode.SelectSingleNode("//html")?.GetAttributeValue("lang", "Missing") ?? "Missing";
+
+                var metaRefresh = doc.DocumentNode.SelectSingleNode("//meta[@http-equiv='refresh']")?.GetAttributeValue("content", "");
+                if (!string.IsNullOrEmpty(metaRefresh))
+                {
+                    reportBuilder.AppendLine($"- WARNING: Client-Side Meta Refresh Redirect detected: {metaRefresh}");
+                }
+
+                reportBuilder.AppendLine($"- Indexability (Meta Robots): {metaRobots}");
+                reportBuilder.AppendLine($"- Title: {title}");
+                reportBuilder.AppendLine($"- H1: {h1}");
+                reportBuilder.AppendLine($"- Description: {metaDesc}");
+                reportBuilder.AppendLine($"- HTML Lang: {htmlLang}");
+                reportBuilder.AppendLine($"- Canonical: {canonical}");
+
+                var hreflangs = doc.DocumentNode.SelectNodes("//link[@rel='alternate' and @hreflang]");
+                if (hreflangs != null)
+                {
+                    var langList = hreflangs.Select(n => $"{n.GetAttributeValue("hreflang", "")} ({n.GetAttributeValue("href", "")})");
+                    reportBuilder.AppendLine($"- Hreflang: {string.Join(", ", langList)}");
+                }
+
+                // --- DOPLNĚNO PRO AI: Open Graph a Twitter ---
+                var ogNodes = doc.DocumentNode.SelectNodes("//meta[starts-with(@property, 'og:')]");
+                if (ogNodes != null)
+                {
+                    var ogList = ogNodes.Select(n => $"{n.GetAttributeValue("property", "")}: {n.GetAttributeValue("content", "")}");
+                    reportBuilder.AppendLine($"- Open Graph: {string.Join(" | ", ogList)}");
+                }
+
+                var twNodes = doc.DocumentNode.SelectNodes("//meta[starts-with(@name, 'twitter:')]");
+                if (twNodes != null)
+                {
+                    var twList = twNodes.Select(n => $"{n.GetAttributeValue("name", "")}: {n.GetAttributeValue("content", "")}");
+                    reportBuilder.AppendLine($"- Twitter Cards: {string.Join(" | ", twList)}");
+                }
+
+                // --- DOPLNĚNO PRO AI: Schema.org JSON-LD ---
+                var jsonNodes = doc.DocumentNode.SelectNodes("//script[@type='application/ld+json']");
+                if (jsonNodes != null)
+                {
+                    reportBuilder.AppendLine($"- Schema.org (JSON-LD): Found {jsonNodes.Count} script(s)");
+                    int schemaIdx = 1;
+                    foreach (var node in jsonNodes)
+                    {
+                        var rawJson = node.InnerText?.Trim() ?? string.Empty;
+                        var formatted = FormatJson(rawJson); // Využíváme tvoji stávající formátovací metodu
+                        reportBuilder.AppendLine($"  [Schema {schemaIdx++}]:\n{formatted}");
+                    }
+                }
+
+                // Analýza textu
+                AnalyzeContent(doc);
+                reportBuilder.AppendLine($"- Total Word Count: {TotalWordCount}");
+
+                var keywords = string.Join(", ", TopKeywords.Take(5).Select(k => $"{k.Word} ({k.Density}%)"));
+                reportBuilder.AppendLine($"- Top Keywords: {keywords}");
+
+                // --- DOPLNĚNO PRO AI: Stažení robots.txt pro danou doménu ---
+                try
+                {
+                    var robotsUrl = new Uri(new Uri(currentUrl), "/robots.txt");
+                    var robotsResponse = await _httpClient.GetAsync(robotsUrl);
+                    if (robotsResponse.IsSuccessStatusCode)
+                    {
+                        var robotsTxt = await robotsResponse.Content.ReadAsStringAsync();
+                        reportBuilder.AppendLine($"- robots.txt: Found");
+                        reportBuilder.AppendLine($"\n=== ROBOTS.TXT CONTENT ===\n{robotsTxt}\n==========================");
+                    }
+                    else
+                    {
+                        reportBuilder.AppendLine($"- robots.txt: Not Found ({robotsResponse.StatusCode})");
+                    }
+                }
+                catch
+                {
+                    reportBuilder.AppendLine($"- robots.txt: Error fetching");
+                }
+            }
+        }
         public ObservableCollection<KeywordStat> TopKeywords { get; } = new();
         public MainViewModel()
         {
-            // 1. Nastavíme handler, který automaticky dekomprimuje GZip, Deflate i moderní Brotli
             var handler = new HttpClientHandler
             {
-                AutomaticDecompression = System.Net.DecompressionMethods.All
+                AutomaticDecompression = System.Net.DecompressionMethods.All,
+                AllowAutoRedirect = false // CRITICAL: Stop automatic redirects to track the chain
             };
 
             _httpClient = new HttpClient(handler);
-
-            // 2. Nastavíme User-Agent hlavičku, abychom se tvářili jako legitimní prohlížeč
             _httpClient.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 CrawlerLens/1.0");
         }
 

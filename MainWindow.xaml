@@ -22,221 +22,327 @@
     <Grid Margin="0,0,0,16">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
         <ui:TitleBar Grid.Row="0" Title="CrawlerLens" Icon="Eye24" Margin="0,0,0,16" Padding="16,8"/>
 
-        <Grid Grid.Row="1" Margin="16,0,16,16">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="Auto" />
-            </Grid.ColumnDefinitions>
+        <TabControl Grid.Row="1" Margin="16,0,16,0" Background="Transparent" BorderThickness="0">
 
-            <ui:TextBox Grid.Column="0" Text="{Binding TargetUrl, UpdateSourceTrigger=PropertyChanged}" 
-                        PlaceholderText="Enter URL to analyze (e.g., https://github.com)" 
-                        Icon="Globe24" FontSize="16" Height="40" Margin="0,0,8,0"/>
-
-            <ui:Button Grid.Column="1" Command="{Binding AnalyzeUrlCommand}" 
-                       Appearance="Primary" Height="40" Padding="24,0">
-                <StackPanel Orientation="Horizontal">
-                    <ui:ProgressRing IsIndeterminate="True" Width="16" Height="16" Margin="0,0,8,0" 
-                                     Visibility="{Binding IsBusy, Converter={StaticResource BoolToVis}}" />
-                    <TextBlock Text="Analyze" VerticalAlignment="Center"/>
-                </StackPanel>
-            </ui:Button>
-        </Grid>
-
-        <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto" Margin="16,0,16,0">
-            <StackPanel Margin="0,0,0,16">
-
-                <ui:Card Margin="0,0,0,12">
-                    <StackPanel>
-                        <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
-                            <ui:SymbolIcon Symbol="DocumentText24" Margin="0,0,8,0" />
-                            <TextBlock Text="Core Metadata" FontSize="16" FontWeight="SemiBold" />
-                        </StackPanel>
-
-                        <TextBlock Text="Title" FontWeight="Bold" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
-                        <ui:TextBox Text="{Binding PageTitle, Mode=OneWay}" IsReadOnly="True" TextWrapping="Wrap" Margin="0,4,0,8" />
-
-                        <TextBlock Text="Description" FontWeight="Bold" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
-                        <ui:TextBox Text="{Binding MetaDescription, Mode=OneWay}" IsReadOnly="True" TextWrapping="Wrap" MinLines="2" Margin="0,4,0,8"/>
-                        <TextBlock Text="Meta Robots" FontWeight="Bold" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
-                        <ui:TextBox Text="{Binding MetaRobots, Mode=OneWay}" IsReadOnly="True" Margin="0,4,0,8" />
-
-                        <TextBlock Text="Canonical URL" FontWeight="Bold" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
-                        <ui:TextBox Text="{Binding CanonicalUrl, Mode=OneWay}" IsReadOnly="True" TextWrapping="Wrap" Margin="0,4,0,0" />
-
+            <TabItem>
+                <TabItem.Header>
+                    <StackPanel Orientation="Horizontal">
+                        <ui:SymbolIcon Symbol="Eye24" Margin="0,0,8,0"/>
+                        <TextBlock Text="Visual Inspector" VerticalAlignment="Center"/>
                     </StackPanel>
-                </ui:Card>
+                </TabItem.Header>
 
-                <Grid Margin="0,0,0,12">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="12" />
-                        <ColumnDefinition Width="*" />
-                    </Grid.ColumnDefinitions>
+                <Grid Margin="0,16,0,0">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
 
-                    <ui:Card Grid.Column="0">
-                        <StackPanel>
-                            <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
-                                <ui:SymbolIcon Symbol="ShareAndroid24" Margin="0,0,8,0" />
-                                <TextBlock Text="Open Graph (og:*)" FontWeight="Bold" FontSize="16" />
+                    <Grid Grid.Row="0" Margin="0,0,0,16">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <ui:TextBox Grid.Column="0" Text="{Binding TargetUrl, UpdateSourceTrigger=PropertyChanged}" 
+                                    PlaceholderText="Enter URL to analyze (e.g., https://github.com)" 
+                                    Icon="Globe24" FontSize="16" Height="40" Margin="0,0,16,0"/>
+
+                        <ui:Button Grid.Column="1" Command="{Binding AnalyzeUrlCommand}" 
+                                   Appearance="Primary" Height="40" Padding="24,0">
+                            <StackPanel Orientation="Horizontal">
+                                <ui:ProgressRing IsIndeterminate="True" Width="16" Height="16" Margin="0,0,8,0" 
+                                                 Visibility="{Binding IsBusy, Converter={StaticResource BoolToVis}}" />
+                                <TextBlock Text="Analyze" VerticalAlignment="Center"/>
                             </StackPanel>
-                            <ItemsControl ItemsSource="{Binding OpenGraphTags}">
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate>
-                                        <Grid Margin="0,0,0,12">
-                                            <Grid.RowDefinitions>
-                                                <RowDefinition Height="Auto"/>
-                                                <RowDefinition Height="Auto"/>
-                                                <RowDefinition Height="Auto"/>
-                                            </Grid.RowDefinitions>
+                        </ui:Button>
+                    </Grid>
 
-                                            <TextBlock Text="{Binding Key}" FontSize="11" Foreground="{DynamicResource TextFillColorTertiaryBrush}" FontWeight="SemiBold"/>
+                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                        <StackPanel Margin="0,0,0,16">
 
-                                            <ui:TextBox Grid.Row="1" Text="{Binding Value, Mode=OneWay}" IsReadOnly="True" TextWrapping="Wrap" Margin="0,2,0,4"/>
+                            <ui:Card Margin="0,0,0,12">
+                                <StackPanel>
+                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                                        <ui:SymbolIcon Symbol="DocumentText24" Margin="0,0,8,0" />
+                                        <TextBlock Text="Core Metadata" FontSize="16" FontWeight="SemiBold" />
+                                    </StackPanel>
 
-                                            <Border Grid.Row="2" CornerRadius="6" ClipToBounds="True" HorizontalAlignment="Left" 
-                                                    Visibility="{Binding IsImage, Converter={StaticResource BoolToVis}}">
-                                                <Image Source="{Binding Value}" MaxHeight="150" Stretch="Uniform" />
-                                            </Border>
-                                        </Grid>
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
-                        </StackPanel>
-                    </ui:Card>
+                                    <TextBlock Text="Title" FontWeight="Bold" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                                    <ui:TextBox Text="{Binding PageTitle, Mode=OneWay}" IsReadOnly="True" TextWrapping="Wrap" Margin="0,4,0,8" />
 
-                    <ui:Card Grid.Column="2">
-                        <StackPanel>
-                            <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
-                                <ui:SymbolIcon Symbol="News24" Margin="0,0,8,0" />
-                                <TextBlock Text="Twitter Cards (twitter:*)" FontWeight="Bold" FontSize="16" />
-                            </StackPanel>
-                            <ItemsControl ItemsSource="{Binding TwitterTags}">
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate>
-                                        <Grid Margin="0,0,0,8">
-                                            <Grid.RowDefinitions>
-                                                <RowDefinition Height="Auto"/>
-                                                <RowDefinition Height="Auto"/>
-                                            </Grid.RowDefinitions>
-                                            <TextBlock Text="{Binding Key}" FontSize="11" Foreground="{DynamicResource TextFillColorTertiaryBrush}" FontWeight="SemiBold"/>
-                                            <ui:TextBox Grid.Row="1" Text="{Binding Value, Mode=OneWay}" IsReadOnly="True" TextWrapping="Wrap" Margin="0,2,0,0"/>
-                                        </Grid>
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
-                        </StackPanel>
-                    </ui:Card>
-                </Grid>
-                <ui:Card Margin="0,0,0,12">
-                    <StackPanel>
-                        <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
-                            <ui:SymbolIcon Symbol="Earth24" Margin="0,0,8,0" />
-                            <TextBlock Text="Language Versions (hreflang)" FontSize="16" FontWeight="SemiBold" />
-                        </StackPanel>
+                                    <TextBlock Text="Description" FontWeight="Bold" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                                    <ui:TextBox Text="{Binding MetaDescription, Mode=OneWay}" IsReadOnly="True" TextWrapping="Wrap" MinLines="2" Margin="0,4,0,8"/>
 
-                        <ItemsControl ItemsSource="{Binding HreflangTags}">
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate>
+                                    <TextBlock Text="Meta Robots" FontWeight="Bold" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                                    <ui:TextBox Text="{Binding MetaRobots, Mode=OneWay}" IsReadOnly="True" Margin="0,4,0,8" />
+
+                                    <TextBlock Text="Canonical URL" FontWeight="Bold" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                                    <ui:TextBox Text="{Binding CanonicalUrl, Mode=OneWay}" IsReadOnly="True" TextWrapping="Wrap" Margin="0,4,0,0" />
+                                </StackPanel>
+                            </ui:Card>
+
+                            <Grid Margin="0,0,0,12">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="12" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+
+                                <ui:Card Grid.Column="0">
+                                    <StackPanel>
+                                        <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                                            <ui:SymbolIcon Symbol="ShareAndroid24" Margin="0,0,8,0" />
+                                            <TextBlock Text="Open Graph (og:*)" FontWeight="Bold" FontSize="16" />
+                                        </StackPanel>
+                                        <ItemsControl ItemsSource="{Binding OpenGraphTags}">
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <Grid Margin="0,0,0,12">
+                                                        <Grid.RowDefinitions>
+                                                            <RowDefinition Height="Auto"/>
+                                                            <RowDefinition Height="Auto"/>
+                                                            <RowDefinition Height="Auto"/>
+                                                        </Grid.RowDefinitions>
+
+                                                        <TextBlock Text="{Binding Key}" FontSize="11" Foreground="{DynamicResource TextFillColorTertiaryBrush}" FontWeight="SemiBold"/>
+                                                        <ui:TextBox Grid.Row="1" Text="{Binding Value, Mode=OneWay}" IsReadOnly="True" TextWrapping="Wrap" Margin="0,2,0,4"/>
+                                                        <Border Grid.Row="2" CornerRadius="6" ClipToBounds="True" HorizontalAlignment="Left" 
+                                                                Visibility="{Binding IsImage, Converter={StaticResource BoolToVis}}">
+                                                            <Image Source="{Binding Value}" MaxHeight="150" Stretch="Uniform" />
+                                                        </Border>
+                                                    </Grid>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </StackPanel>
+                                </ui:Card>
+
+                                <ui:Card Grid.Column="2">
+                                    <StackPanel>
+                                        <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                                            <ui:SymbolIcon Symbol="News24" Margin="0,0,8,0" />
+                                            <TextBlock Text="Twitter Cards (twitter:*)" FontWeight="Bold" FontSize="16" />
+                                        </StackPanel>
+                                        <ItemsControl ItemsSource="{Binding TwitterTags}">
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <Grid Margin="0,0,0,8">
+                                                        <Grid.RowDefinitions>
+                                                            <RowDefinition Height="Auto"/>
+                                                            <RowDefinition Height="Auto"/>
+                                                            <RowDefinition Height="Auto"/>
+                                                        </Grid.RowDefinitions>
+                                                        <TextBlock Text="{Binding Key}" FontSize="11" Foreground="{DynamicResource TextFillColorTertiaryBrush}" FontWeight="SemiBold"/>
+                                                        <ui:TextBox Grid.Row="1" Text="{Binding Value, Mode=OneWay}" IsReadOnly="True" TextWrapping="Wrap" Margin="0,2,0,4"/>
+                                                        <Border Grid.Row="2" CornerRadius="6" ClipToBounds="True" HorizontalAlignment="Left" 
+                                                                Visibility="{Binding IsImage, Converter={StaticResource BoolToVis}}">
+                                                            <Image Source="{Binding Value}" MaxHeight="150" Stretch="Uniform" />
+                                                        </Border>
+                                                    </Grid>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </StackPanel>
+                                </ui:Card>
+                            </Grid>
+
+                            <ui:Card Margin="0,0,0,12">
+                                <StackPanel>
+                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                                        <ui:SymbolIcon Symbol="Earth24" Margin="0,0,8,0" />
+                                        <TextBlock Text="Language Versions (hreflang)" FontSize="16" FontWeight="SemiBold" />
+                                    </StackPanel>
+
+                                    <ItemsControl ItemsSource="{Binding HreflangTags}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Grid Margin="0,0,0,8">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="60"/>
+                                                        <ColumnDefinition Width="*"/>
+                                                    </Grid.ColumnDefinitions>
+
+                                                    <Border Background="{DynamicResource ControlFillColorDefaultBrush}" CornerRadius="4" Margin="0,0,8,0">
+                                                        <TextBlock Text="{Binding Key}" VerticalAlignment="Center" HorizontalAlignment="Center" FontWeight="Bold"/>
+                                                    </Border>
+
+                                                    <ui:TextBox Grid.Column="1" Text="{Binding Value, Mode=OneWay}" IsReadOnly="True" />
+                                                </Grid>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </StackPanel>
+                            </ui:Card>
+
+                            <ui:Card Margin="0,0,0,12">
+                                <StackPanel>
+                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                                        <ui:SymbolIcon Symbol="Code24" Margin="0,0,8,0" />
+                                        <TextBlock Text="Schema.org (JSON-LD)" FontSize="16" FontWeight="SemiBold" />
+                                    </StackPanel>
+                                    <ItemsControl ItemsSource="{Binding JsonLdSchemas}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <ui:TextBox Text="{Binding Mode=OneWay}" IsReadOnly="True" 
+                                                            TextWrapping="Wrap" FontFamily="Consolas" MinLines="5" Margin="0,0,0,8"/>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </StackPanel>
+                            </ui:Card>
+
+                            <ui:Card Margin="0,0,0,12">
+                                <StackPanel>
+                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                                        <ui:SymbolIcon Symbol="Bot24" Margin="0,0,8,0" />
+                                        <TextBlock Text="robots.txt" FontSize="16" FontWeight="SemiBold" />
+                                    </StackPanel>
+                                    <ui:TextBox Text="{Binding RobotsTxtContent, Mode=OneWay}" IsReadOnly="True" 
+                                                TextWrapping="Wrap" FontFamily="Consolas" MinLines="5"/>
+                                </StackPanel>
+                            </ui:Card>
+
+                            <ui:Card Margin="0,0,0,12">
+                                <StackPanel>
+                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                                        <ui:SymbolIcon Symbol="TextBulletListSquare24" Margin="0,0,8,0" />
+                                        <TextBlock Text="Content Analysis (Keywords)" FontSize="16" FontWeight="SemiBold" />
+                                    </StackPanel>
+
+                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
+                                        <TextBlock Text="Total Word Count:" FontWeight="Bold" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,8,0"/>
+                                        <TextBlock Text="{Binding TotalWordCount}" FontWeight="Bold" Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
+                                    </StackPanel>
+
                                     <Grid Margin="0,0,0,8">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="60"/>
-                                            <ColumnDefinition Width="*"/>
-                                        </Grid.ColumnDefinitions>
-
-                                        <Border Background="{DynamicResource ControlFillColorDefaultBrush}" CornerRadius="4" Margin="0,0,8,0">
-                                            <TextBlock Text="{Binding Key}" VerticalAlignment="Center" HorizontalAlignment="Center" FontWeight="Bold"/>
-                                        </Border>
-
-                                        <ui:TextBox Grid.Column="1" Text="{Binding Value, Mode=OneWay}" IsReadOnly="True" />
-                                    </Grid>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
-                    </StackPanel>
-                </ui:Card>
-                <ui:Card Margin="0,0,0,12">
-                    <StackPanel>
-                        <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
-                            <ui:SymbolIcon Symbol="Code24" Margin="0,0,8,0" />
-                            <TextBlock Text="Schema.org (JSON-LD)" FontSize="16" FontWeight="SemiBold" />
-                        </StackPanel>
-                        <ItemsControl ItemsSource="{Binding JsonLdSchemas}">
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate>
-                                    <ui:TextBox Text="{Binding Mode=OneWay}" IsReadOnly="True" 
-                                                TextWrapping="Wrap" FontFamily="Consolas" MinLines="5" Margin="0,0,0,8"/>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
-                    </StackPanel>
-                </ui:Card>
-
-                <ui:Card>
-                    <StackPanel>
-                        <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
-                            <ui:SymbolIcon Symbol="Bot24" Margin="0,0,8,0" />
-                            <TextBlock Text="robots.txt" FontSize="16" FontWeight="SemiBold" />
-                        </StackPanel>
-                        <ui:TextBox Text="{Binding RobotsTxtContent, Mode=OneWay}" IsReadOnly="True" 
-                                    TextWrapping="Wrap" FontFamily="Consolas" MinLines="5"/>
-                    </StackPanel>
-                </ui:Card>
-                <ui:Card>
-                    <StackPanel>
-                        <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
-                            <ui:SymbolIcon Symbol="TextBulletListSquare24" Margin="0,0,8,0" />
-                            <TextBlock Text="Content Analysis (Keywords)" FontSize="16" FontWeight="SemiBold" />
-                        </StackPanel>
-
-                        <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
-                            <TextBlock Text="Total Word Count:" FontWeight="Bold" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,8,0"/>
-                            <TextBlock Text="{Binding TotalWordCount}" FontWeight="Bold" Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
-                        </StackPanel>
-
-                        <Grid Margin="0,0,0,8">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="2*"/>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-                            <TextBlock Text="Keyword" FontWeight="Bold" Foreground="{DynamicResource TextFillColorTertiaryBrush}"/>
-                            <TextBlock Grid.Column="1" Text="Count" FontWeight="Bold" Foreground="{DynamicResource TextFillColorTertiaryBrush}"/>
-                            <TextBlock Grid.Column="2" Text="Density" FontWeight="Bold" Foreground="{DynamicResource TextFillColorTertiaryBrush}"/>
-                        </Grid>
-
-                        <Separator Margin="0,0,0,8" Background="{DynamicResource ControlStrokeColorDefaultBrush}"/>
-
-                        <ItemsControl ItemsSource="{Binding TopKeywords}">
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate>
-                                    <Grid Margin="0,4,0,4">
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="2*"/>
                                             <ColumnDefinition Width="*"/>
                                             <ColumnDefinition Width="*"/>
                                         </Grid.ColumnDefinitions>
-
-                                        <TextBlock Text="{Binding Word}" FontWeight="SemiBold" VerticalAlignment="Center"/>
-
-                                        <Border Grid.Column="1" Background="{DynamicResource ControlFillColorDefaultBrush}" CornerRadius="4" HorizontalAlignment="Left" Padding="8,2">
-                                            <TextBlock Text="{Binding Count}" VerticalAlignment="Center" />
-                                        </Border>
-
-                                        <TextBlock Grid.Column="2" Text="{Binding Density, StringFormat=\{0:N2\} %}" VerticalAlignment="Center" Foreground="#4CAF50" FontWeight="Bold"/>
+                                        <TextBlock Text="Keyword" FontWeight="Bold" Foreground="{DynamicResource TextFillColorTertiaryBrush}"/>
+                                        <TextBlock Grid.Column="1" Text="Count" FontWeight="Bold" Foreground="{DynamicResource TextFillColorTertiaryBrush}"/>
+                                        <TextBlock Grid.Column="2" Text="Density" FontWeight="Bold" Foreground="{DynamicResource TextFillColorTertiaryBrush}"/>
                                     </Grid>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
-                    </StackPanel>
-                </ui:Card>
 
-            </StackPanel>
-        </ScrollViewer>
+                                    <Separator Margin="0,0,0,8" Background="{DynamicResource ControlStrokeColorDefaultBrush}"/>
+
+                                    <ItemsControl ItemsSource="{Binding TopKeywords}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Grid Margin="0,4,0,4">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="2*"/>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="*"/>
+                                                    </Grid.ColumnDefinitions>
+
+                                                    <TextBlock Text="{Binding Word}" FontWeight="SemiBold" VerticalAlignment="Center"/>
+
+                                                    <Border Grid.Column="1" Background="{DynamicResource ControlFillColorDefaultBrush}" CornerRadius="4" HorizontalAlignment="Left" Padding="8,2">
+                                                        <TextBlock Text="{Binding Count}" VerticalAlignment="Center" />
+                                                    </Border>
+
+                                                    <TextBlock Grid.Column="2" Text="{Binding Density, StringFormat=\{0:N2\} %}" VerticalAlignment="Center" Foreground="#4CAF50" FontWeight="Bold"/>
+                                                </Grid>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </StackPanel>
+                            </ui:Card>
+
+                        </StackPanel>
+                    </ScrollViewer>
+                </Grid>
+            </TabItem>
+
+            <TabItem>
+                <TabItem.Header>
+                    <StackPanel Orientation="Horizontal">
+                        <ui:SymbolIcon Symbol="Bot24" Margin="0,0,8,0"/>
+                        <TextBlock Text="AI Prompt Generator" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </TabItem.Header>
+
+                <Grid Margin="0,16,0,0">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <Grid Grid.Row="0" Margin="0,0,0,16">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <ui:TextBox Grid.Column="0" Text="{Binding UrlBatchInput, UpdateSourceTrigger=PropertyChanged}" 
+                                    PlaceholderText="Paste multiple URLs here (one per line)..." 
+                                    AcceptsReturn="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" 
+                                    MinLines="3" MaxLines="5" Margin="0,0,16,0" FontFamily="Consolas"/>
+
+                        <ui:Button Grid.Column="1" Command="{Binding GenerateAiReportCommand}" Appearance="Primary" VerticalAlignment="Stretch" Padding="24,0">
+                            <StackPanel Orientation="Horizontal">
+                                <ui:ProgressRing IsIndeterminate="True" Width="16" Height="16" Margin="0,0,8,0" Visibility="{Binding IsGeneratingPrompt, Converter={StaticResource BoolToVis}}" />
+                                <TextBlock Text="Generate AI Payload" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </ui:Button>
+                    </Grid>
+
+                    <ui:Card Grid.Row="1" VerticalAlignment="Stretch" Padding="12">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+
+                            <Grid Margin="0,0,0,8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+
+                                <TextBlock Text="Output Payload for LLMs (Markdown)" FontWeight="SemiBold" VerticalAlignment="Center" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+
+                                <ui:Button Grid.Column="1" Command="{Binding CopyPromptCommand}" Appearance="Secondary">
+                                    <StackPanel Orientation="Horizontal">
+                                        <ui:SymbolIcon Symbol="{Binding CopyButtonIcon}" Margin="0,0,6,0" />
+                                        <TextBlock Text="{Binding CopyButtonText}" />
+                                    </StackPanel>
+                                </ui:Button>
+                            </Grid>
+
+                            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Visible" Margin="0,0,0,12">
+                                <ui:TextBox Text="{Binding AiPromptOutput, Mode=OneWay}" 
+                                            IsReadOnly="True" AcceptsReturn="True" TextWrapping="Wrap" 
+                                            BorderThickness="0" Background="Transparent"
+                                            FontFamily="Consolas" />
+                            </ScrollViewer>
+
+                            <Border Grid.Row="2" Background="{DynamicResource ControlFillColorDefaultBrush}" CornerRadius="4" Padding="12,8">
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                    <TextBlock Text="Chars:" FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,4,0"/>
+                                    <TextBlock Text="{Binding PromptCharCount}" FontWeight="Bold" Margin="0,0,16,0"/>
+
+                                    <TextBlock Text="Est. Tokens (~):" FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,4,0"/>
+                                    <TextBlock Text="{Binding PromptEstTokens}" FontWeight="Bold" Margin="0,0,16,0"/>
+
+                                    <TextBlock Text="Est. Cost (Input):" FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,4,0"/>
+                                    <TextBlock Text="{Binding PromptEstCost}" FontWeight="Bold" Foreground="#4CAF50"/>
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+                    </ui:Card>
+                </Grid>
+            </TabItem>
+
+        </TabControl>
     </Grid>
 </ui:FluentWindow>
